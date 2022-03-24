@@ -4,6 +4,9 @@ import com.ead.authuser.models.UserModel;
 import com.ead.authuser.repository.UserRepository;
 import com.ead.authuser.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -51,4 +54,11 @@ public class UserServiceImpl implements UserService {
     public UserModel update(UserModel userModel) {
         return save(userModel);
     }
+
+    @Override
+    public Page<UserModel> findAll(Specification<UserModel> userSpec, Pageable pageable) {
+        return userRepository.findAll(userSpec, pageable);
+    }
+
+
 }

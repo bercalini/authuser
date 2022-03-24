@@ -3,15 +3,22 @@ package com.ead.authuser.controller;
 import com.ead.authuser.dto.UserDTO;
 import com.ead.authuser.models.UserModel;
 import com.ead.authuser.services.UserService;
+import com.ead.authuser.specifications.UserSpecification;
 import com.fasterxml.jackson.annotation.JsonView;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+
 import java.util.Optional;
 import java.util.UUID;
 
@@ -24,8 +31,16 @@ public class UserController {
     private UserService userService;
 
     @GetMapping
-    public ResponseEntity<List<UserModel>> findAllUsers() {
-        return ResponseEntity.status(HttpStatus.OK).body(userService.findAll());
+    public ResponseEntity<Page<UserModel>> findAllUsers(UserSpecification.UserSpec userSpec,
+                                                        @PageableDefault(page = 0, size = 10, sort = "userId", direction = Sort.Direction.ASC) Pageable pageable) {
+        Page<UserModel> listPageUserModel = userService.findAll(userSpec, pageable);
+        if (!listPageUserModel.isEmpty()) {
+            listPageUserModel.toList().stream().forEach(
+                   user -> {
+                       user.add(linkTo(methodOn(UserController.class).findOneUser(user.getUserId())).withSelfRel());
+                   });
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(listPageUserModel);
     }
 
     @GetMapping("/{userId}")
