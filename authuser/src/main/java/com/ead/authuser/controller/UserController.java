@@ -2,7 +2,6 @@ package com.ead.authuser.controller;
 
 import com.ead.authuser.models.UserModel;
 import com.ead.authuser.services.UserService;
-import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
