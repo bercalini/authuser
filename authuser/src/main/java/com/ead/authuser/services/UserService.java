@@ -15,4 +15,5 @@ public interface UserService {
     boolean existsByEmail(String email);
 
     UserModel save(UserModel userModel);
+    UserModel update(UserModel userModel);
 }
