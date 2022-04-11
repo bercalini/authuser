@@ -5,6 +5,7 @@ import com.ead.authuser.models.UserModel;
 import com.ead.authuser.services.UserService;
 import com.ead.authuser.specifications.UserSpecification;
 import com.fasterxml.jackson.annotation.JsonView;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -22,6 +23,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 import java.util.Optional;
 import java.util.UUID;
 
+@Log4j2
 @RestController
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RequestMapping("/users")
@@ -32,9 +34,15 @@ public class UserController {
 
     @GetMapping
     public ResponseEntity<Page<UserModel>> findAllUsers(UserSpecification.UserSpec userSpec,
-                                                        @PageableDefault(page = 0, size = 10, sort = "userId", direction = Sort.Direction.ASC) Pageable pageable) {
-        Page<UserModel> listPageUserModel = userService.findAll(userSpec, pageable);
-        if (!listPageUserModel.isEmpty()) {
+                                                        @PageableDefault(page = 0, size = 10, sort = "userId", direction = Sort.Direction.ASC) Pageable pageable,
+                                                        @RequestParam(required = false) UUID courseId) {
+        Page<UserModel> listPageUserModel = null;
+        if(courseId != null) {
+            listPageUserModel = userService.findAll(UserSpecification.userCourseId(courseId).and(userSpec), pageable);
+        } else {
+            listPageUserModel =userService.findAll(userSpec, pageable);
+        }
+        if(!listPageUserModel.isEmpty()) {
             listPageUserModel.toList().stream().forEach(
                    user -> {
                        user.add(linkTo(methodOn(UserController.class).findOneUser(user.getUserId())).withSelfRel());
@@ -55,20 +63,22 @@ public class UserController {
 
     @DeleteMapping("/{userId}")
     public ResponseEntity<Object> delete(@PathVariable(value = "userId") UUID userId) {
+        log.debug("DELETE delete by id {} ", userId);
         Optional<UserModel> user = userService.findById(userId);
-        if(user.isPresent()) {
+        if (user.isPresent()) {
             userService.delete(user.get());
+            log.info("DELETA com sucesso {}", userId);
             return ResponseEntity.status(HttpStatus.OK).body("sucess user deleted");
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
         }
     }
-
     @PutMapping("/{userId}/updateUser")
     public ResponseEntity<Object> updateUser(@PathVariable(value = "userId") UUID userId,
                                              @Validated(UserDTO.UserView.UserPut.class)
                                              @RequestBody
                                              @JsonView(UserDTO.UserView.UserPut.class) UserDTO userDTO) {
+        log.debug("UPDATE updateUser userDTO {} ", userDTO);
         Optional<UserModel> userModel = userService.findById(userId);
         if (userModel.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
@@ -76,8 +86,9 @@ public class UserController {
         BeanUtils.copyProperties(userDTO, userModel.get(),
                 "userId", "userName", "email", "password", "cpf",
                     "imageUrl", "creationDate", "userStatus", "userType");
-        userService.update(userModel.get());
-        return ResponseEntity.status(HttpStatus.OK).body(userModel);
+        UserModel userModeAlterado = userService.update(userModel.get());
+        log.info("UPDATE com sucesso ID {} ", userModeAlterado.getUserId());
+        return ResponseEntity.status(HttpStatus.OK).body(userModeAlterado);
     }
 
     @PutMapping("/{userId}/updatePassword")
@@ -113,7 +124,6 @@ public class UserController {
                 "creationDate", "userStatus", "userType", "fullName", "phone");
         userService.update(userModel.get());
         return ResponseEntity.status(HttpStatus.OK).body(userModel);
-
     }
 
 

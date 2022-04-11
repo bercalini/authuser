@@ -4,7 +4,6 @@ import com.ead.authuser.validation.UserNameConstraint;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonView;
 import lombok.Data;
-import org.apache.catalina.User;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
