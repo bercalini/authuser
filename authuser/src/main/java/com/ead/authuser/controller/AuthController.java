@@ -39,7 +39,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Email is already taken");
         }
         UserModel userModel = userAssembler.converterUserModelDTOToUserModel(userDTO);
-        userModel.setUserStatus(UserStatus.ACTIVE);
+        userModel.setUserStatus(UserStatus.BLOCKED);
         userModel.setUserType(UserType.STUDENT);
         UserModel userModelSalvo = userService.save(userModel);
         log.debug("Post register userID {}", userModelSalvo.getUserId());
